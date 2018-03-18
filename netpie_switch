@@ -1,0 +1,259 @@
+#include <ESP8266WiFi.h>
+#include <MicroGear.h>
+
+// ----- แก้ค่า config 7 ค่าข้างล่างนี้ --------------------------------------------------------
+const char* ssid     = "puunaa";      // ชื่อ ssid
+const char* password = "puna7881";  // รหัสผ่าน wifi
+
+#define APPID   "SmartHomeSST"
+#define KEY     "nvOAHO2FKgBahYS"
+#define SECRET  "0CqiqjeRiljzlKquMcL4EdxwU"
+
+#define ALIAS   "SmartSwitches"           // แทนที่ด้วยหมายเลขของท่าน เช่น "A01"
+#define NEIGHBOR "NEIGHBOR_ALIAS"             // ชื่ออุปกรณ์ของเพื่อน เช่น "A02"
+// --------------------------------------------------------------------------------------
+
+#define LEDPIN     LED_BUILTIN                // pin ที่ต่อกับไฟ LED บนบอร์ด NodeMCU
+
+
+#define LIGHT1 D7 
+#define LIGHT2 D5
+#define LIGHT3 D3
+#define LIGHT4 D6
+
+int currentLEDState1 = 0;      // ให้เริ่มต้นเป็น OFF หมายเหตุ ไฟ LED บนบอร์ดต่อแบบ active-low
+int lastLEDState1 = 0;
+int currentButtonState1 = 1;   // หมายเหตุ ปุ่ม flash ต่อเข้ากับ GPIO0 แบบ pull-up
+int lastButtonState1 = 0;
+
+int currentLEDState2 = 0;      // ให้เริ่มต้นเป็น OFF หมายเหตุ ไฟ LED บนบอร์ดต่อแบบ active-low
+int lastLEDState2 = 0;
+int currentButtonState2 = 1;   // หมายเหตุ ปุ่ม flash ต่อเข้ากับ GPIO0 แบบ pull-up
+int lastButtonState2 = 0;
+
+int currentLEDState3 = 0;      // ให้เริ่มต้นเป็น OFF หมายเหตุ ไฟ LED บนบอร์ดต่อแบบ active-low
+int lastLEDState3 = 0;
+int currentButtonState3 = 1;   // หมายเหตุ ปุ่ม flash ต่อเข้ากับ GPIO0 แบบ pull-up
+int lastButtonState3 = 0;
+
+int currentLEDState4 = 0;      // ให้เริ่มต้นเป็น OFF หมายเหตุ ไฟ LED บนบอร์ดต่อแบบ active-low
+int lastLEDState4 = 0;
+int currentButtonState4 = 1;   // หมายเหตุ ปุ่ม flash ต่อเข้ากับ GPIO0 แบบ pull-up
+int lastButtonState4 = 0;
+
+WiFiClient client;
+MicroGear microgear(client);
+
+void updateLED1(int state) {
+    // ไฟ LED บน NodeMCU จะติดก็ต่อเมื่อส่งค่า LOW ไปให้ LEDPIN 
+    if(state==1 && currentLEDState1 == 0){
+        currentLEDState1 = 1;
+        digitalWrite(LIGHT1, LOW); // LED ON
+    }
+    else if (state==0 && currentLEDState1 == 1) {
+        currentLEDState1 = 0;
+        digitalWrite(LIGHT1, HIGH); // LED OFF
+    }
+}
+
+void updateLED2(int state) {
+    // ไฟ LED บน NodeMCU จะติดก็ต่อเมื่อส่งค่า LOW ไปให้ LEDPIN 
+    if(state==1 && currentLEDState2 == 0){
+        currentLEDState2 = 1;
+        digitalWrite(LIGHT2, LOW); // LED ON
+    }
+    else if (state==0 && currentLEDState2 == 1) {
+        currentLEDState2 = 0;
+        digitalWrite(LIGHT2, HIGH); // LED OFF
+    }
+}
+
+
+void updateLED3(int state) {
+    // ไฟ LED บน NodeMCU จะติดก็ต่อเมื่อส่งค่า LOW ไปให้ LEDPIN 
+    if(state==1 && currentLEDState3 == 0){
+        currentLEDState3 = 1;
+        digitalWrite(LIGHT3, LOW); // LED ON
+    }
+    else if (state==0 && currentLEDState3 == 1) {
+        currentLEDState3 = 0;
+        digitalWrite(LIGHT3, HIGH); // LED OFF
+    }
+}
+
+
+void updateLED4(int state) {
+    // ไฟ LED บน NodeMCU จะติดก็ต่อเมื่อส่งค่า LOW ไปให้ LEDPIN 
+    if(state==1 && currentLEDState4 == 0){
+        currentLEDState4 = 1;
+        digitalWrite(LIGHT4, LOW); // LED ON
+    }
+    else if (state==0 && currentLEDState4 == 1) {
+        currentLEDState4 = 0;
+        digitalWrite(LIGHT4, HIGH); // LED OFF
+    }
+}
+
+
+void onMsghandler(char *topic, uint8_t* msg, unsigned int msglen) {
+    Serial.print("Incoming message --> ");
+    msg[msglen] = '\0';
+    Serial.println((char *)msg);
+    
+
+    if (strcmp((char *)msg,"10") == 0 ) updateLED1(0);  //เปิดดวงที่ 1
+    if (strcmp((char *)msg,"11") == 0) updateLED1(1);   // ดับไฟดวงที่ 1
+
+    if (strcmp((char *)msg,"20") == 0 ) updateLED2(0);  //เปิดดวงที่ 2
+    if (strcmp((char *)msg,"21") == 0) updateLED2(1);   // ดับไฟดวงที่ 2
+
+    if (strcmp((char *)msg,"30") == 0 ) updateLED3(0);  //เปิดดวงที่ 3
+    if (strcmp((char *)msg,"31") == 0) updateLED3(1);   // ดับไฟดวงที่ 3
+
+    if (strcmp((char *)msg,"40") == 0 ) updateLED4(0);  //เปิดดวงที่ 4
+    if (strcmp((char *)msg,"41") == 0) updateLED4(1);   // ดับไฟดวงที่ 4
+}
+
+void onConnected(char *attribute, uint8_t* msg, unsigned int msglen) {
+    Serial.println("Connected to NETPIE...");
+    microgear.setAlias(ALIAS);
+}
+
+void setup() {
+  
+  //กำหนดขาเอาพุทสำหรับรีเลย์
+  pinMode(LIGHT1, OUTPUT);
+  pinMode(LIGHT2, OUTPUT);
+  pinMode(LIGHT3, OUTPUT);
+  pinMode(LIGHT4, OUTPUT);
+  
+  //กำหนดสถานรีเลย์เป็น off ทั้งหมด
+  digitalWrite(LIGHT1, LOW);
+  digitalWrite(LIGHT2, LOW);
+  digitalWrite(LIGHT3, LOW);
+  digitalWrite(LIGHT4, LOW);
+  
+    microgear.on(MESSAGE,onMsghandler);
+    microgear.on(CONNECTED,onConnected);
+
+    Serial.begin(9600);
+    Serial.println("Starting...");
+
+    // กำหนดชนิดของ PIN (ขาI/O) เช่น INPUT, OUTPUT เป็นต้น
+    pinMode(LEDPIN, OUTPUT);          // LED pin mode กำหนดค่า
+    updateLED1(currentLEDState1);
+
+     // กำหนดชนิดของ PIN (ขาI/O) เช่น INPUT, OUTPUT เป็นต้น
+    pinMode(LEDPIN, OUTPUT);          // LED pin mode กำหนดค่า
+    updateLED2(currentLEDState2);
+
+     // กำหนดชนิดของ PIN (ขาI/O) เช่น INPUT, OUTPUT เป็นต้น
+    pinMode(LEDPIN, OUTPUT);          // LED pin mode กำหนดค่า
+    updateLED3(currentLEDState3);
+
+     // กำหนดชนิดของ PIN (ขาI/O) เช่น INPUT, OUTPUT เป็นต้น
+    pinMode(LEDPIN, OUTPUT);          // LED pin mode กำหนดค่า
+    updateLED4(currentLEDState4);
+
+    if (WiFi.begin(ssid, password)) {
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(1000);
+            Serial.print(".");
+        }
+    }
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    microgear.init(KEY,SECRET,ALIAS);   // กำหนดค่าตันแปรเริ่มต้นให้กับ microgear
+    microgear.connect(APPID);           // ฟังก์ชั่นสำหรับเชื่อมต่อ NETPIE
+
+    
+}
+
+void loop() {
+    if (microgear.connected()) {
+        microgear.loop();
+
+        if(currentLEDState1 != lastLEDState1){
+          microgear.publish("/LEDstate1", currentLEDState1);
+          lastLEDState1 = currentLEDState1;
+        }
+
+        //if (digitalRead(BUTTONPIN)==HIGH) currentButtonState = 0;
+        //else currentButtonState = 1;
+
+        if(currentButtonState1 != lastButtonState1){
+          microgear.chat(ALIAS, currentButtonState1);
+          lastButtonState1 = currentButtonState1;
+        }
+    }
+    else {
+        Serial.println("connection lost, reconnect...");
+        microgear.connect(APPID); 
+    }
+
+     if (microgear.connected()) {
+        microgear.loop();
+
+        if(currentLEDState2 != lastLEDState2){
+          microgear.publish("/LEDstate2", currentLEDState2);
+          lastLEDState2 = currentLEDState2;
+        }
+
+        //if (digitalRead(BUTTONPIN)==HIGH) currentButtonState = 0;
+        //else currentButtonState = 1;
+
+        if(currentButtonState2 != lastButtonState2){
+          microgear.chat(ALIAS, currentButtonState2);
+          lastButtonState2 = currentButtonState2;
+        }
+    }
+    else {
+        Serial.println("connection lost, reconnect...");
+        microgear.connect(APPID); 
+    }
+
+     if (microgear.connected()) {
+        microgear.loop();
+
+        if(currentLEDState3 != lastLEDState3){
+          microgear.publish("/LEDstate3", currentLEDState3);
+          lastLEDState3 = currentLEDState3;
+        }
+
+        //if (digitalRead(BUTTONPIN)==HIGH) currentButtonState = 0;
+        //else currentButtonState = 1;
+
+        if(currentButtonState3 != lastButtonState3){
+          microgear.chat(ALIAS, currentButtonState3);
+          lastButtonState3 = currentButtonState3;
+        }
+    }
+    else {
+        Serial.println("connection lost, reconnect...");
+        microgear.connect(APPID); 
+    }
+
+     if (microgear.connected()) {
+        microgear.loop();
+
+        if(currentLEDState4 != lastLEDState4){
+          microgear.publish("/LEDstate4", currentLEDState4);
+          lastLEDState4 = currentLEDState4;
+        }
+
+        //if (digitalRead(BUTTONPIN)==HIGH) currentButtonState = 0;
+        //else currentButtonState = 1;
+
+        if(currentButtonState4 != lastButtonState4){
+          microgear.chat(ALIAS, currentButtonState4);
+          lastButtonState4 = currentButtonState4;
+        }
+    }
+    else {
+        Serial.println("connection lost, reconnect...");
+        microgear.connect(APPID); 
+    }
+}
+
